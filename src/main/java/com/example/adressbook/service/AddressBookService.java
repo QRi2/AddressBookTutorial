@@ -1,179 +1,135 @@
 package com.example.adressbook.service;
 
+import com.example.adressbook.controller.QueryFilterRequestModel;
 import com.example.adressbook.model.Adressdaten;
 import com.example.adressbook.model.Personendaten;
-import com.example.adressbook.repository.AddressBookRepository;
+import com.example.adressbook.repository.PersonendatenRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
-public class AddressBookService implements IAddressBookService {
+public class AddressBookService {
 
-    AdressBookLogger log = new AdressBookLogger();
+    private AdressBookLogger log = new AdressBookLogger();
 
-    private final AddressBookRepository repository;
+    private final PersonendatenRepository repository;
 
     @Autowired
-    public AddressBookService(AddressBookRepository repository) {
+    public AddressBookService(PersonendatenRepository repository) {
         this.repository = repository;
     }
 
-    @Override
+
     public List<Personendaten> findAll() {
         log.logShowInfo("Suche nach allen Personendaten");
         return repository.findAll();
     }
 
-    @Override
+    public List<Personendaten> filter(QueryFilterRequestModel filter) {
+        List<Personendaten> gefiltertePersonenDaten = findAll();
+
+        if (filter.getId() != 0) {//
+            gefiltertePersonenDaten.stream().filter(person -> filter.getId() == person.getId()).findFirst().ifPresent(person -> log.logShowInfo("person rausgenommen: " + person.getVorname() + " +person.getNAchname"));
+        }
+        if (filter.getName() != null && gefiltertePersonenDaten.size() > 0) {
+            gefiltertePersonenDaten = gefiltertePersonenDaten.stream().filter(person -> filter.getName().equals(person.getName())).collect(Collectors.toList());
+        }
+        if (filter.getVorname() != null && gefiltertePersonenDaten.size() > 0) {
+            gefiltertePersonenDaten = gefiltertePersonenDaten.stream().filter(person -> filter.getVorname().equals(person.getVorname())).collect(Collectors.toList());
+        }
+        if (filter.getMail() != null && gefiltertePersonenDaten.size() > 0) {
+            gefiltertePersonenDaten = gefiltertePersonenDaten.stream().filter(person -> filter.getMail().equals(person.getMail())).collect(Collectors.toList());
+        }
+        if (filter.getTelefonnummer() != null && gefiltertePersonenDaten.size() > 0) {
+            gefiltertePersonenDaten = gefiltertePersonenDaten.stream().filter(person -> person.getTelefonnummer() != null &&filter.getTelefonnummer().equals(person.getTelefonnummer())).collect(Collectors.toList());
+        }
+        if (filter.getStrasse() != null && gefiltertePersonenDaten.size() > 0) {
+            gefiltertePersonenDaten = gefiltertePersonenDaten.stream().filter(person -> person.getAdressdaten() != null && person.getAdressdaten().getStrasse() != null && filter.getStrasse().equals(person.getAdressdaten().getStrasse())).collect(Collectors.toList());
+        }
+        if (filter.getPostleitzahl() != 0 && gefiltertePersonenDaten.size() > 0) {
+            gefiltertePersonenDaten = gefiltertePersonenDaten.stream().filter(person -> person.getAdressdaten() != null && filter.getPostleitzahl() == person.getAdressdaten().getPostleitzahl()).collect(Collectors.toList());
+        }
+        if (filter.getStadt() != null && gefiltertePersonenDaten.size() > 0) {
+            gefiltertePersonenDaten = gefiltertePersonenDaten.stream().filter(person -> person.getAdressdaten() != null && person.getAdressdaten().getStadt() != null && filter.getStadt().equals(person.getAdressdaten().getStadt())).collect(Collectors.toList());
+        }
+        if (filter.getLand() != null && gefiltertePersonenDaten.size() > 0) {
+            gefiltertePersonenDaten = gefiltertePersonenDaten.stream().filter(person -> person.getAdressdaten() != null && person.getAdressdaten().getLand() != null && filter.getLand().equals(person.getAdressdaten().getLand())).collect(Collectors.toList());
+        }
+        log.logShowInfo(gefiltertePersonenDaten.size() + " Ergebnisse entsprechen den Filterkriterien");
+        gefiltertePersonenDaten.forEach(person -> log.logShowInfo(person.getVorname() + " "+ person.getName()));
+        return gefiltertePersonenDaten;
+    }
+
     public Personendaten findById(long id) {
         log.logShowInfo("Suche nach Personendaten anhand der ID: " + id);
         return repository.findById(id).get();
     }
 
-    @Override
     public List<Personendaten> findByName(String name) {
-
-//        List<Personendaten> personenDatensatz = repository.findAll();
-//        List<Personendaten> datensaetzeMitGesuchtemNamen = new ArrayList<>();
-//        log.logShowInfo("Suche nach Personendaten anhand des Namen: " + name);
-//        for (Personendaten personendaten : personenDatensatz) {
-//            if (personendaten.getName().equals(name)) {
-//                datensaetzeMitGesuchtemNamen.add(personendaten);
-//                log.logShowInfo("Treffer bei " + personendaten.getName() + " " + personendaten.getVorname());
-//            }
-//        }
+        log.logShowInfo("Suche nach Personendaten anhand des Namen: " + name);
         return repository.findByName(name);
     }
 
-    @Override
     public List<Personendaten> findByVorname(String vorname) {
-        List<Personendaten> personenDatensatz = repository.findAll();
-        List<Personendaten> datensaetzeMitGesuchtemVornamen = new ArrayList<>();
         log.logShowInfo("Suche nach Personendaten anhand des Vornamen: " + vorname);
-        for (Personendaten personendaten : personenDatensatz) {
-            if (personendaten.getVorname().equals(vorname)) {
-                datensaetzeMitGesuchtemVornamen.add(personendaten);
-                log.logShowInfo("Treffer bei " + personendaten.getVorname() + " " + personendaten.getName());
-            }
-        }
-        return datensaetzeMitGesuchtemVornamen;
+        return repository.findByVorname(vorname);
     }
 
-    @Override
     public List<Personendaten> findByTelefonnummer(String telefonnummer) {
-        List<Personendaten> personenDatensatz = repository.findAll();
-        List<Personendaten> datensaetzeMitGesuchterTelefonnummer = new ArrayList<>();
         log.logShowInfo("Suche nach Personendaten anhand der Telefonnummer: " + telefonnummer);
-        for (Personendaten personendaten : personenDatensatz) {
-            if (personendaten.getTelefonnummer() != null &&
-                    personendaten.getTelefonnummer().equals(telefonnummer)) {
-                datensaetzeMitGesuchterTelefonnummer.add(personendaten);
-                log.logShowInfo("Treffer bei " + personendaten.getVorname() + " " + personendaten.getName());
-            }
-        }
-        return datensaetzeMitGesuchterTelefonnummer;
+        return repository.findByTelefonnummer(telefonnummer);
     }
 
-    @Override
     public List<Personendaten> findByMail(String mail) {
-        List<Personendaten> personenDatensatz = repository.findAll();
-        List<Personendaten> datensaetzeMitGesuchterMail = new ArrayList<>();
         log.logShowInfo("Suche nach Personendaten anhand der E-Mail: " + mail);
-        for (Personendaten personendaten : personenDatensatz) {
-            if (personendaten.getMail().equals(mail)) {
-                datensaetzeMitGesuchterMail.add(personendaten);
-                log.logShowInfo("Treffer bei " + personendaten.getVorname() + " " + personendaten.getName());
-            }
-        }
-        return datensaetzeMitGesuchterMail;
+        return repository.findByMail(mail);
     }
 
-    @Override
     public List<Personendaten> findByStrasse(String strasse) {
-        List<Personendaten> personenDatensatz = repository.findAll();
-        List<Personendaten> datensaetzeMitGesuchterStrasse = new ArrayList<>();
         log.logShowInfo("Suche nach Personendaten anhand der Straße: " + strasse);
-        for (Personendaten personendaten : personenDatensatz) {
-            if (personendaten.getAdressdaten() != null &&
-                    personendaten.getAdressdaten().getStrasse() != null &&
-                    personendaten.getAdressdaten().getStrasse().equals(strasse)) {
-                datensaetzeMitGesuchterStrasse.add(personendaten);
-                log.logShowInfo("Treffer bei " + personendaten.getVorname() + " " + personendaten.getName());
-            }
-        }
-        return datensaetzeMitGesuchterStrasse;
+        return repository.findByAdressdatenStrasse(strasse);
     }
 
-    @Override
     public List<Personendaten> findByPostleitzahl(long postleitzahl) {
-        List<Personendaten> personenDatensatz = repository.findAll();
-        List<Personendaten> datensaetzeMitGesuchterPostleitzahl = new ArrayList<>();
-        log.logShowInfo("Suche nach Personendaten anhand der Postleitzahl: " + postleitzahl);
-        for (Personendaten personendaten : personenDatensatz) {
-            if (personendaten.getAdressdaten() != null &&
-                    personendaten.getAdressdaten().getPostleitzahl() != 0 &&
-                    personendaten.getAdressdaten().getPostleitzahl() == postleitzahl) {
-                datensaetzeMitGesuchterPostleitzahl.add(personendaten);
-                log.logShowInfo("Treffer bei " + personendaten.getVorname() + " " + personendaten.getName());
-            }
-        }
-        return datensaetzeMitGesuchterPostleitzahl;
+        return repository.findByAdressdatenPostleitzahl(postleitzahl);
     }
 
-    @Override
     public List<Personendaten> findByStadt(String stadt) {
-        List<Personendaten> personenDatensatz = repository.findAll();
-        List<Personendaten> datensaetzeMitGesuchterStadt = new ArrayList<>();
         log.logShowInfo("Suche nach Personendaten anhand der Stadt: " + stadt);
-        for (Personendaten personendaten : personenDatensatz) {
-            if (personendaten.getAdressdaten() != null &&
-                    personendaten.getAdressdaten().getStadt() != null &&
-                    personendaten.getAdressdaten().getStadt().equals(stadt)) {
-                datensaetzeMitGesuchterStadt.add(personendaten);
-                log.logShowInfo("Treffer bei " + personendaten.getVorname() + " " + personendaten.getName());
-            }
-        }
-        return datensaetzeMitGesuchterStadt;
+        return repository.findByAdressdatenStadt(stadt);
     }
 
-    @Override
     public List<Personendaten> findByLand(String land) {
-        List<Personendaten> personenDatensatz = repository.findAll();
-        List<Personendaten> datensaetzeMitGesuchtemLand = new ArrayList<>();
         log.logShowInfo("Suche nach Personendaten anhand des Landes: " + land);
-        for (Personendaten personendaten : personenDatensatz) {
-            if (personendaten.getAdressdaten() != null &&
-                    personendaten.getAdressdaten().getLand() != null &&
-                    personendaten.getAdressdaten().getLand().equals(land)) {
-                datensaetzeMitGesuchtemLand.add(personendaten);
-                log.logShowInfo("Treffer bei " + personendaten.getVorname() + " " + personendaten.getName());
-            }
-        }
-        return datensaetzeMitGesuchtemLand;
+        return repository.findByAdressdatenLand(land);
     }
 
-    @Override
     public void addPersonendaten(Personendaten personendaten) {
         log.logShowInfo("Neuer Eintrag für " + personendaten.getVorname() + " " + personendaten.getName() + " " + "erstellt");
         repository.save(personendaten);
     }
 
-    @Override
-    public void deletePersonendaten(long id) {
-        log.logShowInfo("Eintrag mit der ID: " + id + " wird gelöscht");
-        repository.deleteById(id);
+    public boolean deletePersonendaten(long id) {
+        if (repository.findById(id).isPresent()) {
+            log.logShowInfo("Eintrag mit der ID: " + id + " wird gelöscht");
+            repository.deleteById(id);
+            return true;
+        }
+        log.logShowInfo("Eintrag mit der ID: " + id + " ist nicht vorhanden");
+        return false;
     }
 
-    @Override
+
     public void deleteAll() {
         log.logShowInfo("Alle Informationen werden gelöscht");
         repository.deleteAll();
     }
 
-    @Override
+
     public Personendaten updatePersonendaten(long id, Personendaten aktualisiertePersonenDaten) {
         Personendaten zuAktualisierenderDatensatz = repository.findById(id).get();
         if (zuAktualisierenderDatensatz != null) {
@@ -216,23 +172,23 @@ public class AddressBookService implements IAddressBookService {
                     zuAktualisierenderDatensatz.setAdressdaten(adresse);
                 } else if (!zuAktualisierenderDatensatz.getAdressdaten().equals(aktualisiertePersonenDaten.getAdressdaten())) {
                     if (!zuAktualisierenderDatensatz.getAdressdaten().getStrasse().equals(aktualisiertePersonenDaten.getAdressdaten().getStrasse())) {
-                        zuAktualisierenderDatensatz.getAdressdaten().setStrasse(aktualisiertePersonenDaten.getAdressdaten().getStrasse());
                         log.logChangeInfo("Straße", zuAktualisierenderDatensatz.getAdressdaten().getStrasse(), aktualisiertePersonenDaten.getAdressdaten().getStrasse());
+                        zuAktualisierenderDatensatz.getAdressdaten().setStrasse(aktualisiertePersonenDaten.getAdressdaten().getStrasse());
                     }
                     if (zuAktualisierenderDatensatz.getAdressdaten().getPostleitzahl() != aktualisiertePersonenDaten.getAdressdaten().getPostleitzahl()) {
-                        zuAktualisierenderDatensatz.getAdressdaten().setPostleitzahl(aktualisiertePersonenDaten.getAdressdaten().getPostleitzahl());
                         log.logChangeInfo("Postleitzahl", zuAktualisierenderDatensatz.getAdressdaten().getPostleitzahl() + "", aktualisiertePersonenDaten.getAdressdaten().getPostleitzahl() + "");
+                        zuAktualisierenderDatensatz.getAdressdaten().setPostleitzahl(aktualisiertePersonenDaten.getAdressdaten().getPostleitzahl());
                     }
                     if (!zuAktualisierenderDatensatz.getAdressdaten().getStadt().equals(aktualisiertePersonenDaten.getAdressdaten().getStadt())) {
-                        zuAktualisierenderDatensatz.getAdressdaten().setStadt(aktualisiertePersonenDaten.getAdressdaten().getStadt());
                         log.logChangeInfo("Stadt", zuAktualisierenderDatensatz.getAdressdaten().getStadt(), aktualisiertePersonenDaten.getAdressdaten().getStadt());
+                        zuAktualisierenderDatensatz.getAdressdaten().setStadt(aktualisiertePersonenDaten.getAdressdaten().getStadt());
                     }
                     if (!zuAktualisierenderDatensatz.getAdressdaten().getLand().equals(aktualisiertePersonenDaten.getAdressdaten().getLand())) {
-                        zuAktualisierenderDatensatz.getAdressdaten().setLand(aktualisiertePersonenDaten.getAdressdaten().getLand());
                         log.logChangeInfo("Land", zuAktualisierenderDatensatz.getAdressdaten().getLand(), aktualisiertePersonenDaten.getAdressdaten().getLand());
+                        zuAktualisierenderDatensatz.getAdressdaten().setLand(aktualisiertePersonenDaten.getAdressdaten().getLand());
                     }
                 }
-            }else{
+            } else {
                 zuAktualisierenderDatensatz.setAdressdaten(null);
             }
             repository.save(zuAktualisierenderDatensatz);

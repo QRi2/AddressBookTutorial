@@ -7,7 +7,9 @@ import com.example.adressbook.service.AdressBookLogger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.*;
+import org.wolfe.query.QueryParamFilter;
 
 import javax.validation.Valid;
 import java.util.ArrayList;
@@ -44,7 +46,6 @@ public class AddressBookController {
 //        return ResponseEntity.badRequest().build();
 //    }
 
-    private static long generatedID;
 
     @Autowired
     AddressBookService addressBookService;
@@ -108,6 +109,29 @@ public class AddressBookController {
 //
 //    }
 
+//
+//    @GetMapping("/address/optional")
+//    public ResponseEntity<List<Personendaten>> getAddressByQueryParameter(@RequestParam(required = false) String name){
+//                                                                          @RequestParam(required = false) String vorname,
+//                                                                          @RequestParam(required = false) String mail,
+//                                                                          @RequestParam(required = false) String telefonnummer,
+//                                                                          @RequestParam(required = false) String strasse,
+//                                                                          @RequestParam(required = false) String stadt,
+//                                                                          @RequestParam(required = false) String postleitzahl,
+//                                                                          @RequestParam(required = false) String land) {
+//        return ResponseEntity.ok(this.addressBookService.findByName(name));
+//    }
+
+//    @GetMapping("/address")
+//    public ResponseEntity<List<Personendaten>> getAddressByQueryParameter(@RequestParam(required = false) String strasse) {
+//        return ResponseEntity.ok(this.addressBookService.findByStrasse(strasse));
+//    }
+
+    @GetMapping("/address")
+    public ResponseEntity<List<Personendaten>> getAddressByQueryParameter(@QueryParamFilter QueryFilterRequestModel filters) {
+        return ResponseEntity.ok(this.addressBookService.filter(filters));
+    }
+
     //  6.	Ich möchte einen bestehenden Datensatz aktualisieren.
     @PutMapping(value = "/addresses/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Personendaten> updateAddress(@PathVariable long id,
@@ -115,16 +139,18 @@ public class AddressBookController {
         Personendaten neuerDatensatz = this.addressBookService.updatePersonendaten(id, aktualisiertePersonenDaten);
         if (neuerDatensatz != null) {
             return ResponseEntity.ok(neuerDatensatz);
-        } else {
-            return ResponseEntity.badRequest().build();
         }
+        return ResponseEntity.badRequest().build();
+
     }
 
     //  7.	Ich möchte einen bestehenden Datensatz löschen.
     @DeleteMapping(value = "/addresses/{id}")
     public ResponseEntity<String> deleteAddress(@PathVariable long id) {
-        this.addressBookService.deletePersonendaten(id);
-        return ResponseEntity.ok("Einrag mit der ID " + id + " wurde gelöscht");
+        if (this.addressBookService.deletePersonendaten(id)) {
+            return ResponseEntity.ok("Einrag mit der ID " + id + " wurde gelöscht");
+        }
+        return ResponseEntity.badRequest().build();
     }
 
     //  8.	Ich möchte alle bestehenden Datensätze löschen.
