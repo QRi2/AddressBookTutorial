@@ -3,8 +3,8 @@ package com.example.adressbook.service;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class AdressBookLogger {
-    Logger adressbookLogger = LogManager.getLogger(AdressBookLogger.class.getName());
+public class AddressBookLogger {
+    Logger adressbookLogger = LogManager.getLogger(AddressBookLogger.class.getName());
 
     public void logChangeInfo(String wasWurdeGeaendert, String vorher, String nachher) {
         adressbookLogger.info(wasWurdeGeaendert + " von " + vorher + " auf " + nachher + " geändert");
