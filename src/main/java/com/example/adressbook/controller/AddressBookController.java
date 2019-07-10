@@ -12,6 +12,7 @@ import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
 
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 @RestController
 @RequestMapping(value = "/addressbook", produces = MediaType.APPLICATION_JSON_VALUE)
 public class AddressBookController {
@@ -65,29 +66,24 @@ public class AddressBookController {
 
     //  6.	Ich möchte einen bestehenden Datensatz aktualisieren.
     @PutMapping(value = "/addresses/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Personendaten> updateAddress(@PathVariable long id,
-                                                       @Valid @RequestBody Personendaten aktualisiertePersonenDaten) {
-        Personendaten neuerDatensatz = this.addressBookService.updatePersonendaten(id, aktualisiertePersonenDaten);
-        if (neuerDatensatz != null) {
-            return ResponseEntity.ok(neuerDatensatz);
-        }
-        return ResponseEntity.badRequest().build();
-
+    public ResponseEntity<List<Personendaten>> updateAddress(@PathVariable long id,
+                                                             @Valid @RequestBody Personendaten aktualisiertePersonenDaten) {
+        return ResponseEntity.ok(this.addressBookService.updatePersonendaten(id, aktualisiertePersonenDaten));
     }
 
     //  7.	Ich möchte einen bestehenden Datensatz löschen.
     @DeleteMapping(value = "/addresses/{id}")
-    public ResponseEntity<String> deleteAddress(@PathVariable long id) {
-        if (this.addressBookService.deletePersonendaten(id)) {
-            return ResponseEntity.ok("Einrag mit der ID " + id + " wurde gelöscht");
-        }
-        return ResponseEntity.badRequest().build();
+    public ResponseEntity<List<Personendaten>> deleteAddress(@PathVariable long id) {
+        return ResponseEntity.ok(this.addressBookService.deletePersonendaten(id));
     }
 
     //  8.	Ich möchte alle bestehenden Datensätze löschen.
     @DeleteMapping(value = "/addresses")
-    public ResponseEntity<String> deleteAllAddresses() {
-        this.addressBookService.deleteAll();
-        return ResponseEntity.ok("Alle Personendaten wurden gelöscht");
+    public ResponseEntity<List<Personendaten>> deleteAllAddresses() {
+        return ResponseEntity.ok(this.addressBookService.deleteAll());
     }
+
+
 }
+
+

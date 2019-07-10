@@ -54,7 +54,7 @@ public class AddressbookUnitTest {
 
         when(service.filter(filter)).thenReturn(personenlisteFilter);
         when(service.findById(1)).thenReturn((person2));
-        when(service.updatePersonendaten(1, personUpdated)).thenReturn(personUpdated);
+//        when(service.updatePersonendaten(1, personUpdated)).thenReturn(personUpdated);
         when(service.findAll()).thenReturn(personenlisteKomplett);
 
 
@@ -97,19 +97,19 @@ public class AddressbookUnitTest {
         assertEquals("Rachel", controller.filterByQueryParameter((filter)).getBody().get(0).getVorname());
     }
 
-    @Test
-    public void personendatenAktualisieren() {
-        assertEquals("Btherton", controller.updateAddress(1, personenlisteKomplett.get(3)).getBody().getName());
-        assertEquals("gee.Btherton@web.co.uk", controller.updateAddress(1, personenlisteKomplett.get(3)).getBody().getMail());
+//    @Test
+//    public void personendatenAktualisieren() {
+//        assertEquals("Btherton", controller.updateAddress(1, personenlisteKomplett.get(3)).getBody().getName());
+//        assertEquals("gee.Btherton@web.co.uk", controller.updateAddress(1, personenlisteKomplett.get(3)).getBody().getMail());
+//
+//    }
 
-    }
-
-    @Test
-    public void x_loeschePersonendatenByID() {
-        when(service.deletePersonendaten(1)).thenReturn(personenlisteKomplett.remove(personenlisteKomplett.get(0)));
-        controller.deleteAddress(1);
-        assertEquals(3, personenlisteKomplett.size());
-    }
+//    @Test
+//    public void x_loeschePersonendatenByID() {
+//        when(service.deletePersonendaten(1)).thenReturn(personenlisteKomplett.remove(personenlisteKomplett.get(0)));
+//        controller.deleteAddress(1);
+//        assertEquals(3, personenlisteKomplett.size());
+//    }
 
     @Test
     public void xx_loeschePersonendatenKomplett() {

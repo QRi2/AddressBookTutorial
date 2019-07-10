@@ -44,7 +44,7 @@ public class AddressBookService {
             gefiltertePersonenDaten = gefiltertePersonenDaten.stream().filter(person -> filter.getMail().equals(person.getMail())).collect(Collectors.toList());
         }
         if (filter.getTelefonnummer() != null && gefiltertePersonenDaten.size() > 0) {
-            gefiltertePersonenDaten = gefiltertePersonenDaten.stream().filter(person -> person.getTelefonnummer() != null &&filter.getTelefonnummer().equals(person.getTelefonnummer())).collect(Collectors.toList());
+            gefiltertePersonenDaten = gefiltertePersonenDaten.stream().filter(person -> person.getTelefonnummer() != null && filter.getTelefonnummer().equals(person.getTelefonnummer())).collect(Collectors.toList());
         }
         if (filter.getStrasse() != null && gefiltertePersonenDaten.size() > 0) {
             gefiltertePersonenDaten = gefiltertePersonenDaten.stream().filter(person -> person.getAdressdaten() != null && person.getAdressdaten().getStrasse() != null && filter.getStrasse().equals(person.getAdressdaten().getStrasse())).collect(Collectors.toList());
@@ -59,7 +59,7 @@ public class AddressBookService {
             gefiltertePersonenDaten = gefiltertePersonenDaten.stream().filter(person -> person.getAdressdaten() != null && person.getAdressdaten().getLand() != null && filter.getLand().equals(person.getAdressdaten().getLand())).collect(Collectors.toList());
         }
         log.logShowInfo(gefiltertePersonenDaten.size() + " Ergebnisse entsprechen den Filterkriterien");
-        gefiltertePersonenDaten.forEach(person -> log.logShowInfo(person.getVorname() + " "+ person.getName()));
+        gefiltertePersonenDaten.forEach(person -> log.logShowInfo(person.getVorname() + " " + person.getName()));
         return gefiltertePersonenDaten;
     }
 
@@ -107,29 +107,31 @@ public class AddressBookService {
         return repository.findByAdressdatenLand(land);
     }
 
-    public void addPersonendaten(Personendaten personendaten) {
+    public List<Personendaten> addPersonendaten(Personendaten personendaten) {
         log.logShowInfo("Neuer Eintrag für " + personendaten.getVorname() + " " + personendaten.getName() + " " + "erstellt");
         repository.save(personendaten);
+        return repository.findAll();
     }
 
-    public boolean deletePersonendaten(long id) {
+    public List<Personendaten> deletePersonendaten(long id) {
         if (repository.findById(id).isPresent()) {
             log.logShowInfo("Eintrag mit der ID: " + id + " wird gelöscht");
             repository.deleteById(id);
-            return true;
+            return repository.findAll();
         }
         log.logShowInfo("Eintrag mit der ID: " + id + " ist nicht vorhanden");
-        return false;
+        return repository.findAll();
     }
 
 
-    public void deleteAll() {
+    public List<Personendaten> deleteAll() {
         log.logShowInfo("Alle Informationen werden gelöscht");
         repository.deleteAll();
+        return repository.findAll();
     }
 
 
-    public Personendaten updatePersonendaten(long id, Personendaten aktualisiertePersonenDaten) {
+    public List<Personendaten> updatePersonendaten(long id, Personendaten aktualisiertePersonenDaten) {
         Personendaten zuAktualisierenderDatensatz = repository.findById(id).get();
         if (zuAktualisierenderDatensatz != null) {
             if (!zuAktualisierenderDatensatz.getName().equals(aktualisiertePersonenDaten.getName())) {
@@ -144,9 +146,13 @@ public class AddressBookService {
                 log.logChangeInfo("E-Mail", zuAktualisierenderDatensatz.getMail(), aktualisiertePersonenDaten.getMail());
                 zuAktualisierenderDatensatz.setMail(aktualisiertePersonenDaten.getMail());
             }
-            if (zuAktualisierenderDatensatz.getTelefonnummer() == null && aktualisiertePersonenDaten.getTelefonnummer() != null ||
-                    !zuAktualisierenderDatensatz.getTelefonnummer().equals(aktualisiertePersonenDaten.getTelefonnummer())) {
-                log.logChangeInfo("Telefonnummer", zuAktualisierenderDatensatz.getTelefonnummer(), aktualisiertePersonenDaten.getTelefonnummer());
+            if (aktualisiertePersonenDaten.getTelefonnummer() != null && zuAktualisierenderDatensatz.getTelefonnummer() != null) {
+                if (!zuAktualisierenderDatensatz.getTelefonnummer().equals(aktualisiertePersonenDaten.getTelefonnummer())) {
+                    log.logChangeInfo("Telefonnummer", zuAktualisierenderDatensatz.getTelefonnummer(), aktualisiertePersonenDaten.getTelefonnummer());
+                    zuAktualisierenderDatensatz.setTelefonnummer(aktualisiertePersonenDaten.getTelefonnummer());
+                }
+            } else if (aktualisiertePersonenDaten.getTelefonnummer() != null && zuAktualisierenderDatensatz.getTelefonnummer() == null) {
+                log.logShowInfo("Telefonnummer wurde neu angelegt: " + aktualisiertePersonenDaten.getTelefonnummer());
                 zuAktualisierenderDatensatz.setTelefonnummer(aktualisiertePersonenDaten.getTelefonnummer());
             }
             if (aktualisiertePersonenDaten.getAdressdaten() != null) {
@@ -170,20 +176,39 @@ public class AddressBookService {
                     }
                     zuAktualisierenderDatensatz.setAdressdaten(adresse);
                 } else if (!zuAktualisierenderDatensatz.getAdressdaten().equals(aktualisiertePersonenDaten.getAdressdaten())) {
-                    if (!zuAktualisierenderDatensatz.getAdressdaten().getStrasse().equals(aktualisiertePersonenDaten.getAdressdaten().getStrasse())) {
-                        log.logChangeInfo("Straße", zuAktualisierenderDatensatz.getAdressdaten().getStrasse(), aktualisiertePersonenDaten.getAdressdaten().getStrasse());
+
+                    if (aktualisiertePersonenDaten.getAdressdaten().getStrasse() != null && zuAktualisierenderDatensatz.getAdressdaten().getStrasse() != null) {
+                        if (!zuAktualisierenderDatensatz.getAdressdaten().getStrasse().equals(aktualisiertePersonenDaten.getAdressdaten().getStrasse())) {
+                            log.logChangeInfo("Straße", zuAktualisierenderDatensatz.getAdressdaten().getStrasse(), aktualisiertePersonenDaten.getAdressdaten().getStrasse());
+                            zuAktualisierenderDatensatz.getAdressdaten().setStrasse(aktualisiertePersonenDaten.getAdressdaten().getStrasse());
+                        }
+                    } else if (aktualisiertePersonenDaten.getAdressdaten().getStadt() != null && zuAktualisierenderDatensatz.getAdressdaten().getStrasse() == null) {
+                        log.logNewAdressData("Straße", aktualisiertePersonenDaten.getAdressdaten().getStrasse());
                         zuAktualisierenderDatensatz.getAdressdaten().setStrasse(aktualisiertePersonenDaten.getAdressdaten().getStrasse());
                     }
-                    if (zuAktualisierenderDatensatz.getAdressdaten().getPostleitzahl() != aktualisiertePersonenDaten.getAdressdaten().getPostleitzahl()) {
+
+                    if (aktualisiertePersonenDaten.getAdressdaten().getPostleitzahl() != 0 && zuAktualisierenderDatensatz.getAdressdaten().getPostleitzahl() != aktualisiertePersonenDaten.getAdressdaten().getPostleitzahl()) {
                         log.logChangeInfo("Postleitzahl", zuAktualisierenderDatensatz.getAdressdaten().getPostleitzahl() + "", aktualisiertePersonenDaten.getAdressdaten().getPostleitzahl() + "");
                         zuAktualisierenderDatensatz.getAdressdaten().setPostleitzahl(aktualisiertePersonenDaten.getAdressdaten().getPostleitzahl());
                     }
-                    if (!zuAktualisierenderDatensatz.getAdressdaten().getStadt().equals(aktualisiertePersonenDaten.getAdressdaten().getStadt())) {
-                        log.logChangeInfo("Stadt", zuAktualisierenderDatensatz.getAdressdaten().getStadt(), aktualisiertePersonenDaten.getAdressdaten().getStadt());
+
+                    if (aktualisiertePersonenDaten.getAdressdaten().getStadt() != null && zuAktualisierenderDatensatz.getAdressdaten().getStadt() != null) {
+                        if (!zuAktualisierenderDatensatz.getAdressdaten().getStadt().equals(aktualisiertePersonenDaten.getAdressdaten().getStadt())) {
+                            log.logChangeInfo("Stadt", zuAktualisierenderDatensatz.getAdressdaten().getStadt(), aktualisiertePersonenDaten.getAdressdaten().getStadt());
+                            zuAktualisierenderDatensatz.getAdressdaten().setStadt(aktualisiertePersonenDaten.getAdressdaten().getStadt());
+                        }
+                    } else if (aktualisiertePersonenDaten.getAdressdaten().getStadt() != null && zuAktualisierenderDatensatz.getAdressdaten().getStadt() == null) {
+                        log.logNewAdressData("Stadt", aktualisiertePersonenDaten.getAdressdaten().getStadt());
                         zuAktualisierenderDatensatz.getAdressdaten().setStadt(aktualisiertePersonenDaten.getAdressdaten().getStadt());
                     }
-                    if (!zuAktualisierenderDatensatz.getAdressdaten().getLand().equals(aktualisiertePersonenDaten.getAdressdaten().getLand())) {
-                        log.logChangeInfo("Land", zuAktualisierenderDatensatz.getAdressdaten().getLand(), aktualisiertePersonenDaten.getAdressdaten().getLand());
+
+                    if (aktualisiertePersonenDaten.getAdressdaten().getLand() != null && zuAktualisierenderDatensatz.getAdressdaten().getLand() != null) {
+                        if (!zuAktualisierenderDatensatz.getAdressdaten().getLand().equals(aktualisiertePersonenDaten.getAdressdaten().getLand())) {
+                            log.logChangeInfo("Land", zuAktualisierenderDatensatz.getAdressdaten().getLand(), aktualisiertePersonenDaten.getAdressdaten().getLand());
+                            zuAktualisierenderDatensatz.getAdressdaten().setLand(aktualisiertePersonenDaten.getAdressdaten().getLand());
+                        }
+                    } else if (aktualisiertePersonenDaten.getAdressdaten().getLand() != null && zuAktualisierenderDatensatz.getAdressdaten().getLand() == null) {
+                        log.logNewAdressData("Land", aktualisiertePersonenDaten.getAdressdaten().getLand());
                         zuAktualisierenderDatensatz.getAdressdaten().setLand(aktualisiertePersonenDaten.getAdressdaten().getLand());
                     }
                 }
@@ -191,8 +216,8 @@ public class AddressBookService {
                 zuAktualisierenderDatensatz.setAdressdaten(null);
             }
             repository.save(zuAktualisierenderDatensatz);
-            return zuAktualisierenderDatensatz;
+            return repository.findAll();
         }
-        return null;
+        return repository.findAll();
     }
 }
